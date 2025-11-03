@@ -14,7 +14,7 @@ namespace KeyboardMouseHook;
 public partial class App : Application {
 
 	public const string Token = "RW.KeyboardMouseHook.WPF";
-	public const string AppName = "Keyboard Mouse Hook (By R.Wolfer)";
+	public const string AppName = "Keyboard Mouse Hook";
 
 	private static readonly Mutex mutex;
 
@@ -30,13 +30,14 @@ public partial class App : Application {
 	private readonly MenuItem item_ToggleActive = new() {
 		Header = "Toggle Actvie",
 		IsCheckable = true,
-		IsChecked = true,
+		IsChecked = false,
+		//InputGestureText = "Alt+F3",
 	};
 
 	private readonly MenuItem item_BlockKeyboard = new() {
 		Header = "Block Keyboard",
 		IsCheckable = true,
-		IsChecked = false,
+		IsChecked = true,
 	};
 
 	private readonly MenuItem item_About = new() {
@@ -261,6 +262,12 @@ public partial class App : Application {
 	// 全局状态表
 	private static readonly HashSet<int> pressedKeys = [];
 
+	private const int VK_F3 = 0x72; // F3
+
+	private const int VK_LMENU = 0xA4; // 左Alt
+	private const int VK_RMENU = 0xA5; // 右Alt
+	private const int VK_MENU = 0x12; // Alt
+
 	private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
 		if (nCode >= 0) {
 			KBDLLHOOKSTRUCT kbData = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
@@ -268,13 +275,18 @@ public partial class App : Application {
 
 			if (wParam == WM_KEYDOWN) {
 				pressedKeys.Add(vk);
+				//if ((GetAsyncKeyState(VK_MENU) & 0x8000) != 0 && pressedKeys.Contains(VK_F3)) {
+				//	Debug.WriteLine("Alt+F3 pressed!");
+				//}
 			} else if (wParam == WM_KEYUP) {
 				pressedKeys.Remove(vk);
 			}
 
-			if (item_BlockKeyboard.IsChecked) {
-				if (vk is VK_W or VK_A or VK_S or VK_D or VK_SPACE) {
-					return 1;
+			if (item_ToggleActive.IsChecked) {
+				if (item_BlockKeyboard.IsChecked) {
+					if (vk is VK_W or VK_A or VK_S or VK_D or VK_SPACE) {
+						return 1;
+					}
 				}
 			}
 		}
