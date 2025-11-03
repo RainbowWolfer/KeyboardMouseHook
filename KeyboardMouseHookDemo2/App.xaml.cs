@@ -48,6 +48,13 @@ public partial class App : Application
 		}
 
 		SetCursorPos(lpPoint.X + x, lpPoint.Y + y);
+
+		if ((GetAsyncKeyState(VK_SPACE) & 0x8000) != 0)
+		{
+			GetCursorPos(out POINT lpPoint2);
+			mouse_event(MOUSEEVENTF_LEFTDOWN, lpPoint2.X, lpPoint2.Y, 0, 0);
+			mouse_event(MOUSEEVENTF_LEFTUP, lpPoint2.X, lpPoint2.Y, 0, 0);
+		}
 	}
 
 
@@ -56,6 +63,8 @@ public partial class App : Application
 	private const int VK_S = 0x53; // S
 	private const int VK_D = 0x44; // D
 	private const int VK_ESC = 0x1B; // ESC
+	private const int VK_SPACE = 0x20; // 空格
+
 
 	[DllImport("user32.dll")]
 	private static extern short GetAsyncKeyState(int vKey);
@@ -75,5 +84,12 @@ public partial class App : Application
 		public int X;
 		public int Y;
 	}
+
+
+	[DllImport("user32.dll")]
+	public static extern void mouse_event(int dwFlags, int dx, int dy, int cButtons, int dwExtraInfo);
+
+	public const int MOUSEEVENTF_LEFTDOWN = 0x02;
+	public const int MOUSEEVENTF_LEFTUP = 0x04;
 }
 
