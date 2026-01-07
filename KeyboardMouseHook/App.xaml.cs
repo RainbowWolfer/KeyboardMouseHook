@@ -18,6 +18,8 @@ public partial class App : Application {
 
 	private static readonly Mutex mutex;
 
+	// todo : scroll, global toggle on/off hotkey, on/off system sound?, different icon when active/inactive, about dialog, source code dialog?
+
 	static App() {
 		mutex = new Mutex(initiallyOwned: true, name: Token, createdNew: out bool createdNew);
 		if (!createdNew) {
@@ -28,7 +30,7 @@ public partial class App : Application {
 	private readonly NotifyIcon notifyIcon;
 
 	private readonly MenuItem item_ToggleActive = new() {
-		Header = "Toggle Actvie",
+		Header = "Toggle Active",
 		IsCheckable = true,
 		IsChecked = false,
 		//InputGestureText = "Alt+F3",
@@ -132,10 +134,16 @@ public partial class App : Application {
 	private bool lastSpaceDown = false;
 	private bool lastCtrlSpace = false;
 
+	private long lastScrollTime = 0;
+	private bool lastAltF3 = false;
+
 	private void Tick(object? sender, EventArgs e) {
 		if (item_ToggleActive.IsChecked is false) {
 			return;
 		}
+
+		// 检测 Shift 是否按下
+		bool shift = pressedKeys.Contains(VK_LSHIFT) || pressedKeys.Contains(VK_RSHIFT) || pressedKeys.Contains(VK_SHIFT);
 
 		GetCursorPos(out POINT lpPoint);
 
@@ -148,27 +156,51 @@ public partial class App : Application {
 		bool s = pressedKeys.Contains(VK_S);
 		bool d = pressedKeys.Contains(VK_D);
 
-		int x = 0;
-		int y = 0;
-		int offset = 10;
+		if (shift) {
+			long now = Environment.TickCount64;
+			if (now - lastScrollTime > 30) {
+				lastScrollTime = now;
 
-		if (w) {
-			y -= offset;
+				if (w) {
+					mouse_event(MOUSEEVENTF_WHEEL, 0, 0, 120, 0);
+				}
+
+				if (s) {
+					mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -120, 0);
+				}
+
+				if (a) {
+					mouse_event(MOUSEEVENTF_HWHEEL, 0, 0, -120, 0);
+				}
+
+				if (d) {
+					mouse_event(MOUSEEVENTF_HWHEEL, 0, 0, 120, 0);
+				}
+			}
+		} else {
+
+			int x = 0;
+			int y = 0;
+			int offset = 10;
+
+			if (w) {
+				y -= offset;
+			}
+
+			if (a) {
+				x -= offset;
+			}
+
+			if (s) {
+				y += offset;
+			}
+
+			if (d) {
+				x += offset;
+			}
+
+			SetCursorPos(lpPoint.X + x, lpPoint.Y + y);
 		}
-
-		if (a) {
-			x -= offset;
-		}
-
-		if (s) {
-			y += offset;
-		}
-
-		if (d) {
-			x += offset;
-		}
-
-		SetCursorPos(lpPoint.X + x, lpPoint.Y + y);
 
 		//bool space = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
 		bool space = pressedKeys.Contains(VK_SPACE);
@@ -199,6 +231,16 @@ public partial class App : Application {
 
 		lastSpaceDown = space;
 	}
+
+
+
+
+	private const int VK_SHIFT = 0x10;
+	private const int VK_LSHIFT = 0xA0;
+	private const int VK_RSHIFT = 0xA1;
+
+	private const int MOUSEEVENTF_WHEEL = 0x0800;
+	private const int MOUSEEVENTF_HWHEEL = 0x1000; // 水平滚动
 
 
 	private const int VK_W = 0x57; // W
@@ -267,26 +309,37 @@ public partial class App : Application {
 	private const int VK_LMENU = 0xA4; // 左Alt
 	private const int VK_RMENU = 0xA5; // 右Alt
 	private const int VK_MENU = 0x12; // Alt
-
 	private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
 		if (nCode >= 0) {
 			KBDLLHOOKSTRUCT kbData = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
 			int vk = (int)kbData.vkCode;
 
-			if (wParam == WM_KEYDOWN) {
+			if (wParam is WM_KEYDOWN or 0x0104) {
 				pressedKeys.Add(vk);
-				//if ((GetAsyncKeyState(VK_MENU) & 0x8000) != 0 && pressedKeys.Contains(VK_F3)) {
-				//	Debug.WriteLine("Alt+F3 pressed!");
-				//}
-			} else if (wParam == WM_KEYUP) {
+			} else if (wParam is WM_KEYUP or 0x0105) {
 				pressedKeys.Remove(vk);
 			}
 
-			if (item_ToggleActive.IsChecked) {
-				if (item_BlockKeyboard.IsChecked) {
-					if (vk is VK_W or VK_A or VK_S or VK_D or VK_SPACE) {
-						return 1;
-					}
+			// 全局热键 Alt+F3
+			bool alt = pressedKeys.Contains(VK_LMENU) || pressedKeys.Contains(VK_RMENU) || pressedKeys.Contains(VK_MENU);
+			bool f3 = vk == VK_F3;
+
+			bool altF3 = alt && f3;
+
+			if (altF3 && !lastAltF3) {
+				item_ToggleActive.IsChecked = !item_ToggleActive.IsChecked;
+				lastAltF3 = true;
+				return 1; // 拦截
+			}
+
+			if (!altF3) {
+				lastAltF3 = false;
+			}
+
+			// Block Keyboard
+			if (item_ToggleActive.IsChecked is true && item_BlockKeyboard.IsChecked is true) {
+				if (vk is VK_W or VK_A or VK_S or VK_D or VK_SPACE or VK_LSHIFT or VK_RSHIFT) {
+					return 1;
 				}
 			}
 		}

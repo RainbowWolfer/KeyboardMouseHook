@@ -1,0 +1,13 @@
+<Solution>
+  <Folder Name="/_SolutionItems/">
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="Installer/KeyboardMouseHook.aip" />
+    <File Path="LICENSE.txt" />
+    <File Path="nuget.config" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="KeyboardMouseHook/KeyboardMouseHook.csproj" />
+  <Project Path="KeyboardMouseHookDemo/KeyboardMouseHookDemo.csproj" />
+  <Project Path="KeyBoardMouseHookWFDemo/KeyBoardMouseHookWFDemo.csproj" />
+</Solution>
