@@ -11,7 +11,8 @@ using System.Windows.Threading;
 
 namespace KeyboardMouseHook;
 
-public partial class App : Application {
+public partial class App : Application
+{
 
 	public const string Token = "RW.KeyboardMouseHook.WPF";
 	public const string AppName = "Keyboard Mouse Hook";
@@ -20,39 +21,46 @@ public partial class App : Application {
 
 	// todo : scroll, global toggle on/off hotkey, on/off system sound?, different icon when active/inactive, about dialog, source code dialog?
 
-	static App() {
+	static App()
+	{
 		mutex = new Mutex(initiallyOwned: true, name: Token, createdNew: out bool createdNew);
-		if (!createdNew) {
+		if (!createdNew)
+		{
 			Environment.Exit(0);
 		}
 	}
 
 	private readonly NotifyIcon notifyIcon;
 
-	private readonly MenuItem item_ToggleActive = new() {
+	private readonly MenuItem item_ToggleActive = new()
+	{
 		Header = "Toggle Active",
 		IsCheckable = true,
 		IsChecked = false,
 		//InputGestureText = "Alt+F3",
 	};
 
-	private readonly MenuItem item_BlockKeyboard = new() {
+	private readonly MenuItem item_BlockKeyboard = new()
+	{
 		Header = "Block Keyboard",
 		IsCheckable = true,
 		IsChecked = true,
 	};
 
-	private readonly MenuItem item_About = new() {
+	private readonly MenuItem item_About = new()
+	{
 		Header = "About",
 	};
 
-	private readonly MenuItem item_Exit = new() {
+	private readonly MenuItem item_Exit = new()
+	{
 		Header = "Exit",
 	};
 
 	//private Window _hiddenWindow;
 
-	public App() {
+	public App()
+	{
 		ShutdownMode = ShutdownMode.OnExplicitShutdown;
 
 		DispatcherUnhandledException += OnDispatcherUnhandledException;
@@ -63,7 +71,8 @@ public partial class App : Application {
 		_proc = HookCallback;
 		_hookID = SetHook(_proc);
 
-		notifyIcon = new NotifyIcon() {
+		notifyIcon = new NotifyIcon()
+		{
 			Token = Token,
 			Text = AppName,
 			Icon = new BitmapImage(new Uri(@"pack://application:,,,/KeyboardMouseHook;component/AppIcon.png")),
@@ -105,40 +114,61 @@ public partial class App : Application {
 		//_hiddenWindow.Show();
 	}
 
-	private void Item_About_Click(object sender, RoutedEventArgs e) {
+	private void Item_About_Click(object sender, RoutedEventArgs e)
+	{
 		//MessageBox.Show(_hiddenWindow, "dwqdq", AppName, MessageBoxButton.OK);
 		AboutDialog.ShowInstance();
 	}
 
-	private void Item_Exit_Click(object sender, RoutedEventArgs e) {
+	private void Item_Exit_Click(object sender, RoutedEventArgs e)
+	{
 		Shutdown();
 	}
 
-	protected override void OnExit(ExitEventArgs e) {
+	protected override void OnExit(ExitEventArgs e)
+	{
 		base.OnExit(e);
 		UnhookWindowsHookEx(_hookID);
+		try
+		{
+			if (mutex != null)
+			{
+				mutex.ReleaseMutex();
+				mutex.Dispose();
+			}
+		}
+		catch (Exception ex)
+		{
+			Debug.WriteLine(ex);
+		}
 	}
 
-	private void NotifyIconOnMouseDoubleClick(object sender, RoutedEventArgs e) {
+	private void NotifyIconOnMouseDoubleClick(object sender, RoutedEventArgs e)
+	{
 
 	}
 
-	private void NotifyIconOnClick(object sender, RoutedEventArgs e) {
+	private void NotifyIconOnClick(object sender, RoutedEventArgs e)
+	{
 
 	}
 
-	private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e) {
+	private void OnDispatcherUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+	{
 
 	}
 
 	private bool lastSpaceDown = false;
 	private bool lastCtrlSpace = false;
 
-	private long lastScrollTime = 0;
+	private readonly Stopwatch _scrollStopwatch = Stopwatch.StartNew();
+	private long lastScrollTimeMs = 0;
 	private bool lastAltF3 = false;
 
-	private void Tick(object? sender, EventArgs e) {
-		if (item_ToggleActive.IsChecked is false) {
+	private void Tick(object? sender, EventArgs e)
+	{
+		if (item_ToggleActive.IsChecked is false)
+		{
 			return;
 		}
 
@@ -156,46 +186,58 @@ public partial class App : Application {
 		bool s = pressedKeys.Contains(VK_S);
 		bool d = pressedKeys.Contains(VK_D);
 
-		if (shift) {
-			long now = Environment.TickCount64;
-			if (now - lastScrollTime > 30) {
-				lastScrollTime = now;
+		if (shift)
+		{
+			long now = _scrollStopwatch.ElapsedMilliseconds;
+			if (now - lastScrollTimeMs > 30)
+			{
+				lastScrollTimeMs = now;
 
-				if (w) {
+				if (w)
+				{
 					mouse_event(MOUSEEVENTF_WHEEL, 0, 0, 120, 0);
 				}
 
-				if (s) {
+				if (s)
+				{
 					mouse_event(MOUSEEVENTF_WHEEL, 0, 0, -120, 0);
 				}
 
-				if (a) {
+				if (a)
+				{
 					mouse_event(MOUSEEVENTF_HWHEEL, 0, 0, -120, 0);
 				}
 
-				if (d) {
+				if (d)
+				{
 					mouse_event(MOUSEEVENTF_HWHEEL, 0, 0, 120, 0);
 				}
 			}
-		} else {
+		}
+		else
+		{
 
 			int x = 0;
 			int y = 0;
 			int offset = 10;
 
-			if (w) {
+			if (w)
+			{
 				y -= offset;
 			}
 
-			if (a) {
+			if (a)
+			{
 				x -= offset;
 			}
 
-			if (s) {
+			if (s)
+			{
 				y += offset;
 			}
 
-			if (d) {
+			if (d)
+			{
 				x += offset;
 			}
 
@@ -204,11 +246,14 @@ public partial class App : Application {
 
 		//bool space = (GetAsyncKeyState(VK_SPACE) & 0x8000) != 0;
 		bool space = pressedKeys.Contains(VK_SPACE);
-		if (space && !lastSpaceDown) {
+		if (space && !lastSpaceDown)
+		{
 			// 刚刚按下
 			GetCursorPos(out POINT lpPoint2);
 			mouse_event(MOUSEEVENTF_LEFTDOWN, lpPoint2.X, lpPoint2.Y, 0, 0);
-		} else if (!space && lastSpaceDown) {
+		}
+		else if (!space && lastSpaceDown)
+		{
 			// 刚刚抬起
 			GetCursorPos(out POINT lpPoint2);
 			mouse_event(MOUSEEVENTF_LEFTUP, lpPoint2.X, lpPoint2.Y, 0, 0);
@@ -219,7 +264,8 @@ public partial class App : Application {
 		// Ctrl+Space 组合
 		bool ctrlSpace = ctrl && space;
 
-		if (ctrlSpace && !lastCtrlSpace) {
+		if (ctrlSpace && !lastCtrlSpace)
+		{
 			// 刚刚按下组合键 → 触发一次右键点击
 			GetCursorPos(out POINT lpPoint3);
 			mouse_event(MOUSEEVENTF_RIGHTDOWN, lpPoint3.X, lpPoint3.Y, 0, 0);
@@ -270,7 +316,8 @@ public partial class App : Application {
 	private static extern bool GetCursorPos(out POINT lpPoint);
 
 	[StructLayout(LayoutKind.Sequential)]
-	public struct POINT {
+	public struct POINT
+	{
 		public int X;
 		public int Y;
 	}
@@ -293,7 +340,8 @@ public partial class App : Application {
 	#region HOOK
 
 	[StructLayout(LayoutKind.Sequential)]
-	private struct KBDLLHOOKSTRUCT {
+	private struct KBDLLHOOKSTRUCT
+	{
 		public uint vkCode;
 		public uint scanCode;
 		public uint flags;
@@ -309,14 +357,22 @@ public partial class App : Application {
 	private const int VK_LMENU = 0xA4; // 左Alt
 	private const int VK_RMENU = 0xA5; // 右Alt
 	private const int VK_MENU = 0x12; // Alt
-	private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam) {
-		if (nCode >= 0) {
+	private IntPtr HookCallback(int nCode, IntPtr wParam, IntPtr lParam)
+	{
+		if (nCode >= 0)
+		{
 			KBDLLHOOKSTRUCT kbData = Marshal.PtrToStructure<KBDLLHOOKSTRUCT>(lParam);
 			int vk = (int)kbData.vkCode;
 
-			if (wParam is WM_KEYDOWN or 0x0104) {
+			// 修复 1 & 2: 将 IntPtr 转为 long 进行数值比较
+			long wp = wParam.ToInt64();
+
+			if (wp is WM_KEYDOWN or 0x0104)
+			{
 				pressedKeys.Add(vk);
-			} else if (wParam is WM_KEYUP or 0x0105) {
+			}
+			else if (wp is WM_KEYUP or 0x0105)
+			{
 				pressedKeys.Remove(vk);
 			}
 
@@ -326,20 +382,24 @@ public partial class App : Application {
 
 			bool altF3 = alt && f3;
 
-			if (altF3 && !lastAltF3) {
+			if (altF3 && !lastAltF3)
+			{
 				item_ToggleActive.IsChecked = !item_ToggleActive.IsChecked;
 				lastAltF3 = true;
-				return 1; // 拦截
+				return new IntPtr(1); // 拦截
 			}
 
-			if (!altF3) {
+			if (!altF3)
+			{
 				lastAltF3 = false;
 			}
 
 			// Block Keyboard
-			if (item_ToggleActive.IsChecked is true && item_BlockKeyboard.IsChecked is true) {
-				if (vk is VK_W or VK_A or VK_S or VK_D or VK_SPACE or VK_LSHIFT or VK_RSHIFT) {
-					return 1;
+			if (item_ToggleActive.IsChecked is true && item_BlockKeyboard.IsChecked is true)
+			{
+				if (vk is VK_W or VK_A or VK_S or VK_D or VK_SPACE or VK_LSHIFT or VK_RSHIFT)
+				{
+					return new IntPtr(1);
 				}
 			}
 		}
@@ -351,7 +411,8 @@ public partial class App : Application {
 	private readonly LowLevelKeyboardProc _proc;
 	private static IntPtr _hookID = IntPtr.Zero;
 
-	private static IntPtr SetHook(LowLevelKeyboardProc proc) {
+	private static IntPtr SetHook(LowLevelKeyboardProc proc)
+	{
 		using Process curProcess = Process.GetCurrentProcess();
 		using ProcessModule? curModule = curProcess.MainModule;
 		return SetWindowsHookEx(WH_KEYBOARD_LL, proc, GetModuleHandle(curModule!.ModuleName), 0);

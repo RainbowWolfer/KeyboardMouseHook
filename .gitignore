@@ -366,5 +366,4 @@ FodyWeavers.xsd
 
 !Nugets/*.nupkg
 
-Installer/KeyboardMouseHook-SetupFiles
-Installer/KeyboardMouseHook-cache
+/Installer/Output

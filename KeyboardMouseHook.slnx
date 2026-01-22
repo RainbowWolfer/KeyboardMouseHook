@@ -8,6 +8,4 @@
     <File Path="README.md" />
   </Folder>
   <Project Path="KeyboardMouseHook/KeyboardMouseHook.csproj" />
-  <Project Path="KeyboardMouseHookDemo/KeyboardMouseHookDemo.csproj" />
-  <Project Path="KeyBoardMouseHookWFDemo/KeyBoardMouseHookWFDemo.csproj" />
 </Solution>

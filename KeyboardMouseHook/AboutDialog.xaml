@@ -6,7 +6,7 @@
 	xmlns:local="clr-namespace:KeyboardMouseHook"
 	xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 	Width="330"
-	Height="120"
+	Height="140"
 	ResizeMode="NoResize"
 	ShowInTaskbar="True"
 	Topmost="False"
@@ -28,7 +28,8 @@
 			Grid.RowSpan="2"
 			Width="80"
 			Height="80"
-			Margin="10,0"
+			Margin="10,10"
+			VerticalAlignment="Top"
 			Source="/AppIcon.png"/>
 
 		<TextBlock
@@ -42,6 +43,7 @@
 			Grid.Column="1"
 			Margin="0,4"
 			VerticalAlignment="Top">
+			<TextBlock x:Name="VersionText" d:Text="v1.0" FontSize="16"/>
 			<TextBlock FontSize="14" Text="By RainbowWolfer"/>
 			<TextBlock>
 				<Hyperlink NavigateUri="https://github.com/RainbowWolfer/KeyboardMouseHookDemo" RequestNavigate="Hyperlink_RequestNavigate">Github</Hyperlink>
