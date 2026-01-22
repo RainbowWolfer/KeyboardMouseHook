@@ -4,7 +4,7 @@
 
 #define MyAppName "Keyboard Mouse Hook"
 #define MyAppName2 "KeyboardMouseHook"
-#define MyAppVersion "1.0.3"
+#define MyAppVersion "1.0.4"
 #define MyAppPublisher "RainbowWolfer"
 #define MyAppURL "https://github.com/RainbowWolfer/KeyboardMouseHook"
 #define MyAppExeName "KeyboardMouseHook.exe"

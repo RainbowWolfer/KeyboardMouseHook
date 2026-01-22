@@ -46,7 +46,7 @@
 			<TextBlock x:Name="VersionText" d:Text="v1.0" FontSize="16"/>
 			<TextBlock FontSize="14" Text="By RainbowWolfer"/>
 			<TextBlock>
-				<Hyperlink NavigateUri="https://github.com/RainbowWolfer/KeyboardMouseHookDemo" RequestNavigate="Hyperlink_RequestNavigate">Github</Hyperlink>
+				<Hyperlink NavigateUri="https://github.com/RainbowWolfer/KeyboardMouseHook" RequestNavigate="Hyperlink_RequestNavigate">Github</Hyperlink>
 			</TextBlock>
 		</StackPanel>
 	</Grid>
